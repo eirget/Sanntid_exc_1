@@ -33,7 +33,8 @@ Some prefer the command line while some prefer something graphical, both are fin
 Implement this in C and Go:
 
 ```
-global shared int i = 0
+
+
 
 main:
     spawn thread_1

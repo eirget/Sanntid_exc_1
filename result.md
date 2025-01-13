@@ -1,0 +1,1 @@
+Running the code wont always result in 0 because of race conditions that happen since there isnt proper synchronization. There isnt proper scheduling for when the different threads are goint to run, so they will sometimes overwrite eachothers result.
