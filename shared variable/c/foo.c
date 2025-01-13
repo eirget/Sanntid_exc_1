@@ -6,22 +6,33 @@
 
 int i = 0;
 
+pthread_mutex_t lock;
+
 // Note the return type: void*
 void* incrementingThreadFunction(){
     // TODO: increment i 1_000_000 times
     for(int j = 0; j < 1000000; j++) {
+        pthread_mutex_lock(&lock);
         i++;
+        pthread_mutex_unlock(&lock);
     }
     return NULL;
 }
 
 void* decrementingThreadFunction(){
     // TODO: decrement i 1_000_000 times
-    for(int j = 0; j < 1000000; j++) {
+    for(int j = 0; j < 999999; j++) {
+        pthread_mutex_lock(&lock);
         i--;
+        pthread_mutex_unlock(&lock);
     }
     return NULL;
 }
+
+//MUTEX: using mutex lock will synchronize access to the shared variable, best to use mutex scince there is only one shared resource here
+//mutex locks are often used when it is important that only one thread at a time should access the resource
+//
+//semaphores are more used for other purposes when several threads can access a resource concurrently
 
 
 int main(){
@@ -30,6 +41,8 @@ int main(){
     // Hint: search the web! Maybe try "pthread_create example"?
     pthread_t iThread;
     pthread_t dThread;
+    
+    pthread_mutex_init(&lock, NULL);
 
     if(pthread_create(&iThread, NULL, incrementingThreadFunction, NULL) != 0) {
         perror("pthread_create() error");
@@ -50,7 +63,10 @@ int main(){
         perror("pthread_join() error");
         }
 
+    pthread_mutex_destroy(&lock);
 
     printf("The magic number is: %d\n", i);
+
+    
     return 0;
 }

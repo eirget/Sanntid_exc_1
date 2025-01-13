@@ -5,20 +5,37 @@ package main
 import (
 	. "fmt"
 	"runtime"
-	"time"
 )
 
 var i = 0
 
-func incrementing() {
-	for j := 0; j < 1000000; j++ {
-		i++
+func incrementing(req chan string, done chan bool) {
+	for j := 0; j < 999999; j++ {
+		req <- "increment"
 	}
+	done <- true
 }
 
-func decrementing() {
-	for j := 0; j < 999999; j++ {
-		i--
+func decrementing(req chan string, done chan bool) {
+	for j := 0; j < 1000000; j++ {
+		req <- "decrement"
+	}
+	done <- true
+}
+
+func server(req chan string, resp chan int) {
+	for {
+		select {
+		case value := <-req:
+			switch value {
+			case "increment":
+				i++
+			case "decrement":
+				i--
+			case "get":
+				resp <- i
+			}
+		}
 	}
 }
 
@@ -26,12 +43,20 @@ func main() {
 	// What does GOMAXPROCS do? What happens if you set it to 1?
 	runtime.GOMAXPROCS(2)
 
-	// TODO: Spawn both functions as goroutines
-	go decrementing()
-	go incrementing()
+	req := make(chan string)
+	resp := make(chan int)
+	done := make(chan bool)
 
-	// We have no direct way to wait for the completion of a goroutine (without additional synchronization of some sort)
-	// We will do it properly with channels soon. For now: Sleep.
-	time.Sleep(500 * time.Millisecond)
-	Println("The magic number is:", i)
+	// TODO: Spawn both functions as goroutines
+
+	go server(req, resp)
+	go decrementing(req, done)
+	go incrementing(req, done)
+
+	<-done
+	<-done
+
+	req <- "get"
+	finalValue := <-resp
+	Println("The magic number is:", finalValue)
 }
